@@ -1,117 +1,130 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <math.h>
+//C Program to Implement Gauss Seidel Method
+
+#include<stdio.h>
+#include<math.h>
+#include<stdbool.h>
+#define EPSILON 0.001  // till 3 correct decimal places
 
 int n;
-int flag = 0;
+int flag;
 
-float findSum(int i, float arr[][n + 1])
+//Helper function
+float findSum(int i,float a[][n+1])
 {
-    float sum = 0;
-    for (int j = 0; j < n; j++)
-    {
-        if (i != j)
-        {
-            sum = sum + fabs(arr[i][j]);
-        }
-    }
-    return sum;
+     float sum=0;
+     for(int j=0;j<n;j++)
+     {  
+       if(i!=j)  
+         sum+=a[i][j];
+     }
+     return sum;
 }
 
-bool isMethodApplicable(float arr[][n + 1])
+//checks if Gauss Seidel Method is applicable and return true if yes otherwise return false
+bool isMethodApplicable(float a[][n+1])
 {
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            if (fabs(arr[i][i] <= findSum(i, arr)))
-                return false;
-        }
-    }
-    return true;
-}
-void print(int itr, float values[n])
-{
-    printf("iteration %d\n", itr);
-    for (int i = 0; i < n; i++)
-    {
-        printf("value[%d] %f\n", i + 1, values[i]);
-    }
+   for(int i=0;i<n;i++)
+   {
+       for(int j=0;j<n;j++)
+       {
+
+           if(fabs(a[i][i])>findSum(i,a))
+              continue;
+           else  
+              return false;   
+
+       }
+   }
+   return true;
 }
 
-void findValues(float arr[][n + 1], int itr, float values_old[n])
+//prints the Value of Unknowns
+void print(int iteration,float values[n]) 
 {
+  printf("Iteration %d ",iteration);  
+  for(int i=0;i<n;i++)
+    printf("value[%d]=%f ",i+1,values[i]);
+  printf("\n");
+}
+
+
+void findValues(float a[][n+1],int maxIterations,float values_old[n])
+{
+    int i,j,k,iteration;
+    float ratio,sum=0;
     float values_new[n];
-    for (int i = 0; i < n; i++)
+    for(int i=0;i<n;i++)
+     values_new[i]=0;
+    for(iteration=1;iteration<=maxIterations;iteration++)
     {
-        values_new[i] = 0;
-    }
-    int p=0;
-    while (++p)
-    {
-        for (int i = 0; i < n; i++)
+        for(i=0;i<n;i++)
         {
-            int sum = 0;
-            for (int j = 0; j < n; j++)
+            sum=0;
+            for(j=0;j<n;j++)
             {
-                if (i != j)
-                {
-                    sum += arr[i][j] * values_new[j];
-                }
+                if(i!=j)
+                sum+=a[i][j]*values_new[j];
             }
-            values_new[i] = (arr[i][n] - sum) / arr[i][i];
+          
+            values_new[i]=(a[i][n] - sum)/a[i][i];
         }
+        
+        //Now you have found the values of n unknowns for above iteration
+        //Now check if your matching criteria satisfied , comparing with previous iteration values
+        for(k=0;k<n;k++)
+        {
+            if(fabs(values_old[k]-values_new[k])<EPSILON)
+                continue;          
+            else
+            {
+               flag=1;
+               break;
+            }
+        } 
+        if(flag==0)
+        {
+            print(iteration,values_new);  // print final values of unknowns  and return
+            return ;
+        }
+        flag=0; //resetting the flag
+       
+        print(iteration,values_new); //To print intermediate roots
 
-        // checking
-        for (int i = 0; i < n; i++)
-        {
-            if (fabs(values_new[i] - values_old[i] > 0.001))
-            {
-                flag = 1;
-                break;
-            }
-        }
-        if (flag == 0)
-        {
-            print(p, values_new);
-            return;
-        }
-        flag = 0;
-        print(p, values_new);
-        for (int i = 0; i < n; i++)
-        {
-            values_old[i] = values_new[i];
-        }
-        print(p, values_new);
-        if(p==n)
-        break;
-    }
-}
+        //copy new values of unknowns to old value array
+        for(k=0;k<n;k++)
+             values_old[k]=values_new[k];
+    } //end of iteration loop
+    print(iteration,values_new) ; 
+
+} //end of findValues()
+
+ 
 int main()
 {
-    printf("enter the no. of variables ");
-    scanf("%d", &n);
-    float arr[n][n + 1];
-    int itr;
-    printf("enter the no. of iterations");
-    scanf("%d", &itr);
-    float val[n];
-    for (int i = 0; i < n; i++)
+    int i,j,k,x,y,maxIterations;
+    float ratio;
+    printf("Enter no of Unknowns\n");
+    scanf("%d",&n);
+    printf("Enter no. of iterations\n");
+    scanf("%d",&maxIterations);
+    float a[n][n+1];
+    float values[n];;
+
+    printf("Enter the Augmented Matrix\n");
+    for(int i=0;i<n;i++)
     {
-        for (int j = 0; j < n + 1; j++)
-        {
-            scanf("%f", &arr[i][j]);
-        }
+     for(int j=0;j<n+1;j++)
+        scanf("%f",&a[i][j]);
     }
-    if(!isMethodApplicable(arr))
-    {
-        printf("gauss seidel cant be applied\n");
+
+   if(!isMethodApplicable(a))
+   {
+        printf("Gauss Seidel Method can't be applied");
         return 0;
-    }
-    printf("gauss seidel can be applied\n");
-    for (int i = 0; i < n; i++)
-        val[i] = 0;
-    findValues(arr, itr, val);
-    return 0;
+   }
+   printf("\n\nGauss Seidel Method is applicable\n");
+   for(int i=0;i<n;i++)
+     values[i]=0;
+   findValues(a,maxIterations,values);
+   return 0;
 }
